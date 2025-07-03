@@ -1,0 +1,151 @@
+{
+  "name": "Daily Intern Job alerts",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            },
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -300,
+        -140
+      ],
+      "id": "80ae4738-7441-45f6-8530-ada00b9055c5",
+      "name": "Daily Job Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://www.arbeitnow.com/api/job-board-api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -60,
+        20
+      ],
+      "id": "64f89369-a423-4503-b24b-867eabd24b7d",
+      "name": "Fetch Job Listings"
+    },
+    {
+      "parameters": {
+        "jsCode": "const keyword = 'intern';\n\nconst jobs = items[0].json.data;\n\n// Filter jobs that mention \"intern\" in title or description\nconst filteredJobs = jobs.filter(job => {\n  const title = job.title?.toLowerCase() || '';\n  const desc = job.description?.toLowerCase() || '';\n  return title.includes(keyword) || desc.includes(keyword);\n});\n\nreturn [{\n  json: {\n    total_matching_jobs: filteredJobs.length,\n    matching_jobs: filteredJobs.map(j => ({\n      title: j.title,\n      company: j.company_name,\n      url: j.url\n    }))\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        140,
+        -160
+      ],
+      "id": "df702413-d942-41d9-af6f-4d1b0f27c144",
+      "name": "Filter Intern Jobs"
+    },
+    {
+      "parameters": {
+        "jsCode": "const jobs = $json[\"matching_jobs\"].filter(job => {\n  const title = job.title.toLowerCase();\n  return title.includes(\"intern\") || title.includes(\"fresher\");\n});\n\nlet message = '';\n\nfor (let i = 0; i < Math.min(jobs.length, 15); i++) {\n  const job = jobs[i];\n  message += `📢 New Opportunity\\n🏢 ${job.company}\\n📌 ${job.title}\\n🔗 ${job.url}\\n\\n`;\n}\n\nreturn [{ json: { text: message || \"No intern or fresher jobs found!\" } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        380,
+        40
+      ],
+      "id": "b69c42b2-3b57-4723-9182-429ab069040f",
+      "name": "Format Telegram Message"
+    },
+    {
+      "parameters": {
+        "chatId": "@sentiment_alert_demo",
+        "text": "={{$json[\"text\"]}}\n",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        600,
+        -100
+      ],
+      "id": "c0c86c17-e65b-4111-8066-b5e5ae039fc2",
+      "name": "Send to Telegram Channel",
+      "webhookId": "eda3d2dc-764d-470f-9e1a-e36f41e00c9d",
+      "credentials": {
+        "telegramApi": {
+          "id": "S5BOq78VEY8uAJek",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Daily Job Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Job Listings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Job Listings": {
+      "main": [
+        [
+          {
+            "node": "Filter Intern Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Intern Jobs": {
+      "main": [
+        [
+          {
+            "node": "Format Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Telegram Message": {
+      "main": [
+        [
+          {
+            "node": "Send to Telegram Channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c536dfd6-3af8-4187-9c8b-772d700f05be",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "04333d2810de096a68b0ccbb6a6f103f22cc7373c91b09ec4b29294579e81087"
+  },
+  "id": "3pusgBpiQfdZ4JSY",
+  "tags": []
+}
