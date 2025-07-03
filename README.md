@@ -1,4 +1,4 @@
-# 🧠 AI/ML Intern Job Alerts to Telegram
+# 🧠 Intern Job Alerts to Telegram
 
 This project is a no-code/low-code automation built using **n8n**, which fetches the latest job postings related to "intern" or "fresher" roles and sends formatted alerts to a **Telegram channel** daily.
 
